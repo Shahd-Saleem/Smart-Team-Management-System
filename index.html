@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartTeam — Intelligent Team Formation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Epilogue:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ── TOKENS & BASE STYLES ─────────────────────────────── */
+:root {
+  --white: #ffffff; --off: #f7f6f3; --ink: #0f1623; --ink2: #3a4256; --ink3: #7a8399;
+  --rule: #e4e2dc; --rule2: #ccc9c1; --navy: #1a2e52; --navy2: #243d6e;
+  --gold: #c8922a; --gold-bg: #fdf4e7; --green: #1a6644; --green-bg:#ebf5f0;
+  --red: #b83232; --red-bg: #fdf0f0; --r: 6px; --r-lg: 10px;
+  --shadow: 0 1px 3px rgba(15,22,35,0.07);
+  font-family: 'Epilogue', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--off); color: var(--ink); min-height: 100vh; line-height: 1.6; font-size: 15px; }
+.hidden { display: none !important; }
+.view { display: none; }
+.view.active { display: block; }
+.main { max-width: 820px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+/* ── TYPOGRAPHY ──────────────────────────── */
+.display { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 700; color: var(--ink); }
+.display-sm { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 600; color: var(--ink); }
+.eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink3); }
+.lead { color: var(--ink2); font-size: 15px; font-weight: 300; margin-top: 6px; }
+
+/* ── UI ELEMENTS ─────────────────────────────── */
+.nav { background: var(--white); border-bottom: 1px solid var(--rule); height: 62px; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; position: sticky; top: 0; z-index: 100; }
+.nav-brand { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--navy); }
+.card { background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-lg); padding: 1.75rem; box-shadow: var(--shadow); margin-bottom: 1rem; }
+.btn { display: inline-flex; align-items: center; cursor: pointer; border: none; border-radius: var(--r); padding: 9px 18px; font-size: 13.5px; font-weight: 600; transition: all .15s; }
+.btn-primary { background: var(--navy); color: var(--white); }
+.btn-primary:hover { background: var(--navy2); }
+.btn-ghost { background: transparent; border: 1px solid var(--rule2); }
+.btn-sm { padding: 6px 13px; font-size: 12.5px; }
+
+.field { margin-bottom: 1.25rem; }
+.field label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink3); text-transform: uppercase; margin-bottom: 6px; }
+.field input, .field textarea, .field select { width: 100%; padding: 9px 13px; border: 1px solid var(--rule2); border-radius: var(--r); font-family: inherit; font-size: 14px; }
+.msg { padding: 10px 14px; border-radius: var(--r); font-size: 13px; font-weight: 500; margin-bottom: 1rem; display: none; }
+.msg.show { display: block; }
+.msg-err { background: var(--red-bg); color: var(--red); border-left: 3px solid var(--red); }
+.msg-ok { background: var(--green-bg); color: var(--green); border-left: 3px solid var(--green); }
+.msg-info { background: #e8edf6; color: var(--navy); border-left: 3px solid var(--navy); }
+
+/* Dashboard & Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
+.stat-box { background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-lg); padding: 1.5rem; text-align: center; box-shadow: var(--shadow); }
+.stat-num { font-size: 2.2rem; font-weight: 700; color: var(--navy); font-family: 'Playfair Display', serif; line-height: 1; }
+.stat-label { font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.pill-navy { background: #e8edf6; color: var(--navy); }
+.pill-green { background: var(--green-bg); color: var(--green); }
+.pill-gold { background: var(--gold-bg); color: var(--gold); }
+.pill-gray { background: var(--off); color: var(--ink3); border: 1px solid var(--rule); }
+
+/* Quizzes & Tasks */
+.likert-row { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--rule); }
+.likert-question { font-weight: 500; font-size: 15px; margin-bottom: 1rem; }
+.likert-options { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink3); }
+.likert-options label { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; width: 100%; }
+.likert-options input[type="radio"] { accent-color: var(--navy); }
+.task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border: 1px solid var(--rule); background: var(--off); margin-bottom: 8px; border-radius: var(--r); }
+.task-item.done { opacity: 0.6; text-decoration: line-through; background: var(--green-bg); }
+.progress-container { width: 100%; background: var(--rule); height: 8px; border-radius: 4px; margin-top: 10px; }
+.progress-bar { height: 100%; background: var(--green); width: 0%; transition: width 0.3s; border-radius: 4px; }
+
+/* Generated Teams UI */
+.team-block { background: var(--white); border: 1px solid var(--rule); border-radius: var(--r-lg); margin-bottom: 1.25rem; overflow: hidden; }
+.team-header { padding: 1rem 1.5rem; background: var(--navy); color: var(--white); display: flex; justify-content: space-between; align-items: center; }
+.team-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--rule); }
+.team-stat { padding: 0.85rem 1.25rem; border-right: 1px solid var(--rule); font-size: 12px; }
+.member-row { display: flex; gap: 13px; padding: 1rem 1.5rem; border-bottom: 1px solid var(--rule); }
+.member-av { width: 36px; height: 36px; border-radius: 50%; background: #e8edf6; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--navy); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">SmartTeam</div>
+  <div id="nav-right" class="hidden" style="display: flex; align-items: center;">
+    <span id="nav-user-info" style="font-size:13px; margin-right:15px; font-weight:500;"></span>
+    <button class="btn btn-ghost btn-sm" id="btn-logout">Sign Out</button>
+  </div>
+</nav>
+
+<!-- LOGIN VIEW -->
+<div id="view-login" class="view active main">
+  <div class="card" style="max-width: 400px; margin: 4rem auto;">
+    <div class="display-sm" style="margin-bottom: 1rem;">Welcome back.</div>
+    <div class="field">
+      <label>Display Name</label>
+      <input type="text" id="login-name" placeholder="e.g. Jana Ibrahim" />
+    </div>
+    <div class="field">
+      <label>I am a</label>
+      <select id="login-role">
+        <option value="manager">Manager (Create Projects)</option>
+        <option value="member">Member (Join Teams)</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="btn-login" style="width: 100%; justify-content: center;">Continue →</button>
+  </div>
+</div>
+
+<!-- MANAGER HOME -->
+<div id="view-manager" class="view main">
+  <div class="display-sm" style="margin-bottom: 1.5rem;">Manager Dashboard</div>
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-num" id="stat-projects">0</div><div class="stat-label">Your Projects</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-active-projects">0</div><div class="stat-label">Active Teams</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-avg-comp">--</div><div class="stat-label">Avg Comp. Score</div></div>
+  </div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <div class="eyebrow">Your projects</div>
+    <button class="btn btn-primary btn-sm" id="btn-new-project">+ New project</button>
+  </div>
+  <div id="manager-project-list"></div>
+</div>
+
+<!-- PROJECT FORM -->
+<div id="view-project-form" class="view main">
+  <button class="btn btn-ghost btn-sm" id="pf-cancel" style="margin-bottom:1rem;">← Back</button>
+  <div class="display-sm" id="project-form-title">New project</div>
+  <div class="card" style="margin-top:1.5rem;">
+    <div class="field"><label>Project name</label><input type="text" id="pf-name" /></div>
+    <div style="display:flex; gap:15px">
+      <div class="field" style="flex:1;"><label>Industry</label><select id="pf-industry">
+        <option value="tech">Software & Tech</option>
+        <option value="marketing">Marketing & PR</option>
+        <option value="design">Design & Creative</option>
+      </select></div>
+      <div class="field" style="flex:1;"><label>Team Size</label><input type="number" id="pf-team-size" min="2" max="10" value="3" /></div>
+    </div>
+    <div class="field"><label>Project tasks (One per line)</label><textarea id="pf-tasks"></textarea></div>
+    <button class="btn btn-primary" id="pf-save">Save project</button>
+  </div>
+</div>
+
+<!-- PROJECT DETAIL (MANAGER) -->
+<div id="view-project-detail" class="view main">
+  <button class="btn btn-ghost btn-sm" id="btn-back-mgr" style="margin-bottom:1rem;">← Dashboard</button>
+  <div class="display-sm" id="pd-title">Project Name</div>
+  <div class="lead" id="pd-meta" style="margin-bottom:2rem;"></div>
+
+  <div class="card" id="pd-generation-section">
+    <div class="eyebrow" style="margin-bottom:1rem;">Enroll Members</div>
+    <div style="display:flex; gap:10px;">
+      <select id="enroll-select" style="flex:1; padding:9px; border-radius:6px; border:1px solid var(--rule2);"></select>
+      <button class="btn btn-primary btn-sm" id="btn-enroll">Enroll</button>
+    </div>
+    <div id="enrolled-list" style="margin-top:15px;"></div>
+    <hr>
+    <div class="eyebrow" style="margin-bottom:1rem;">Team formation</div>
+    <button class="btn btn-primary" id="btn-generate">⚡ Generate teams</button>
+    <div id="generate-msg" class="msg" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card" id="pd-progress-section" style="display:none;">
+    <div class="eyebrow">Project Progress</div>
+    <div class="progress-container"><div class="progress-bar" id="pd-progress-bar"></div></div>
+    <p id="pd-progress-text" style="font-size:13px; margin-top:5px; color:var(--ink3);"></p>
+    <button class="btn btn-primary" id="btn-complete-project" style="margin-top:15px;">Mark Project Completed</button>
+  </div>
+
+  <div id="pd-results"></div>
+</div>
+
+<!-- MEMBER HOME -->
+<div id="view-member" class="view main">
+  <div class="display-sm" id="mem-greeting" style="margin-bottom: 1.5rem;">Hello.</div>
+  <div id="member-assessment-status" class="msg show"></div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div class="eyebrow">Personality Assessment</div>
+        <div style="font-size:13px; color:var(--ink3);">Determine your strengths and role fit.</div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-take-personality-quiz">Take assessment</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:10px;">Join a project</div>
+    <div style="display:flex; gap:10px;">
+      <input type="text" id="join-project-id" placeholder="Enter Project ID..." style="flex:1" />
+      <button class="btn btn-primary" id="btn-join">Enroll</button>
+    </div>
+    <div id="join-msg" class="msg" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="eyebrow" style="margin-top:2rem; margin-bottom:1rem;">My Enrollments</div>
+  <div id="member-enrollments"></div>
+</div>
+
+<!-- PERSONALITY QUIZ -->
+<div id="view-personality-quiz" class="view main">
+  <div class="display-sm">Personality Assessment</div>
+  <p class="lead" style="margin-bottom:2rem;">Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
+  
+  <div class="card">
+    <div id="personality-quiz-container"></div>
+    <div class="field" style="margin-top:2rem;">
+      <label>Years of professional experience</label>
+      <input type="number" id="exp-years" min="0" value="1" style="max-width:140px;" />
+    </div>
+    <button class="btn btn-primary" id="btn-submit-personality">Submit Assessment</button>
+    <button class="btn btn-ghost" id="btn-cancel-personality" style="margin-left:10px;">Cancel</button>
+  </div>
+</div>
+
+<!-- PERSONALITY RESULTS (INSIGHTS) -->
+<div id="view-personality-results" class="view main">
+  <div class="display-sm" style="margin-bottom: 1.5rem;">Your Personality Profile</div>
+  <div class="card" style="text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;" id="insight-icon">🌟</div>
+    <h3 id="insight-title" style="color:var(--navy); font-family:'Playfair Display', serif; font-size:1.8rem; margin-bottom:10px;"></h3>
+    <p id="insight-desc" style="font-size:15px; color:var(--ink2); margin-bottom:20px;"></p>
+    <div style="background: var(--green-bg); padding: 15px; border-radius: var(--r); border: 1px solid var(--green);">
+      <h4 style="color: var(--green); margin-bottom: 5px;">Your Team Strength</h4>
+      <p style="color: var(--ink); font-size: 14px;" id="insight-strengths"></p>
+    </div>
+    <button class="btn btn-primary" id="btn-finish-results" style="margin-top: 30px;">Continue to Dashboard</button>
+  </div>
+</div>
+
+<!-- TECHNICAL QUIZ -->
+<div id="view-tech-quiz" class="view main">
+  <div class="display-sm">Technical Skills Quiz</div>
+  <p class="lead" style="margin-bottom:1.5rem;">Based on the <strong id="tech-quiz-industry-name"></strong> industry.</p>
+  <div class="card">
+    <div id="tech-quiz-container"></div>
+    <button class="btn btn-primary" id="btn-submit-tech" style="margin-top:1rem;">Complete Enrollment</button>
+  </div>
+</div>
+
+<!-- MEMBER DASHBOARD -->
+<div id="view-member-dash" class="view main">
+  <button class="btn btn-ghost btn-sm" id="btn-member-dash-back" style="margin-bottom:1rem;">← Home</button>
+  <div class="display-sm" id="md-team-name">Your Team</div>
+  <p class="lead" id="md-my-role" style="margin-bottom:2rem;"></p>
+
+  <div id="md-feedback-alert" class="card" style="display:none; background:var(--gold-bg); border-color:var(--gold);">
+    <p style="color:var(--gold); font-weight:600;">Project Completed!</p>
+    <button class="btn btn-primary btn-sm" id="btn-go-feedback" style="margin-top:10px;">Give Peer Feedback</button>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:10px;">Your Tasks</div>
+    <ul class="task-list" id="md-task-list"></ul>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:10px;">Team Members</div>
+    <div id="md-teammates-list"></div>
+  </div>
+</div>
+
+<!-- FEEDBACK FORM -->
+<div id="view-feedback" class="view main">
+  <div class="display-sm">Peer Review</div>
+  <p class="lead" style="margin-bottom:2rem;">Rate your teammates' performance.</p>
+  <div id="feedback-container"></div>
+  <button class="btn btn-primary" id="btn-submit-feedback">Submit Feedback</button>
+</div>
+
+<script type="module" src="api.js"></script>
+<script type="module" src="teamFormation.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
